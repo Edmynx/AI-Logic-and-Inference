@@ -18,7 +18,10 @@ class SAT(GSAT):
         return len(self.satisfied) == len(self.clauses)
 
     def walksat(self):
+        print(self.model)
+        print("length", len(self.model))
         for i in range(self.max_flips):
+            print("flips", i)
             if self.__are_all_clauses_satisfied__():
                 return 1
 
@@ -40,7 +43,8 @@ class SAT(GSAT):
                         if var in clause or -var in clause:
                             var_count += self.__is_clause_satisfied__(clause)
                     if var_count > max_count:
-                        max_var = var
+                        max_var = abs(var)
+                print("maxVar", max_var)
 
                 if max_var is not None:
                     self.model[abs(max_var) - 1] = int(not self.model[abs(max_var) - 1])
