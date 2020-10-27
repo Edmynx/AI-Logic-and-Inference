@@ -3,7 +3,7 @@ import random
 from GSAT import GSAT
 
 class SAT(GSAT):
-    def __init__(self, cnf_file, p=0.3, max_flips=100000):
+    def __init__(self, cnf_file, p=1, max_flips=100000):
         GSAT.__init__(self, cnf_file, p)
         self.max_flips = max_flips
         self.satisfied = set()  # clauses that have been satisfied at present
@@ -18,10 +18,7 @@ class SAT(GSAT):
         return len(self.satisfied) == len(self.clauses)
 
     def walksat(self):
-        print(self.model)
-        print("length", len(self.model))
         for i in range(self.max_flips):
-            print("flips", i)
             if self.__are_all_clauses_satisfied__():
                 return 1
 
@@ -34,20 +31,25 @@ class SAT(GSAT):
                 self.model[abs(random_var) - 1] = int(not self.model[abs(random_var) - 1])
 
             else:
-                max_var = None
-                max_count = 0
+                satisfied_scores = {}
+                for elem in self.clauses[random_clause_index]:
+                    self.model[abs(elem) - 1] = int(not self.model[abs(elem) - 1])  # temporarily flip elem's value
+                    var_clauses_satisfied = 0  # how many clauses would be satisfied?
+                    # go through every clause the elem's variable is in and check for clause satisfaction
+                    for clause in self.var_clauses.get(abs(elem)):
+                        var_clauses_satisfied += self.__is_clause_satisfied__(clause)
+                    satisfied_scores[abs(elem)] = var_clauses_satisfied
+                    self.model[abs(elem) - 1] = int(not self.model[abs(elem) - 1])  # undo the flipping
 
-                for var in self.clauses[random_clause_index]:
-                    var_count = 0
-                    for clause in self.clauses:
-                        if var in clause or -var in clause:
-                            var_count += self.__is_clause_satisfied__(clause)
-                    if var_count > max_count:
-                        max_var = abs(var)
+                # uniformly at random choose one of the vars with
+                # the highest score and flip it's value
+                # note that variable's index was stored
+                # this can be used to access the model directly
+                max_score = max(satisfied_scores.values())
+                max_vars = [key for key, value in filter(lambda items: items[1] == max_score, satisfied_scores.items())]
+                max_var = random.choice(max_vars)
+                self.model[max_var - 1] = int(not self.model[max_var - 1])
 
-
-                if max_var is not None:
-                    self.model[abs(max_var) - 1] = int(not self.model[abs(max_var) - 1])
         return 0
 
 

@@ -1,7 +1,9 @@
-import random
+import random, sys
+
+sys.setrecursionlimit(10**6)
 
 class GSAT():
-    def __init__(self, cnf_file, h=0.3):
+    def __init__(self, cnf_file, h=1):
         self.h = h  # threshold value for randomly selecting variables
         self.var_map = {}  # maps clause literals in the given file to integer variables
         self.model = None  # model for assigning values to integer variables
@@ -17,19 +19,22 @@ class GSAT():
         for cnf in file_read:
             clause = set()
             for cnf_literal in cnf.split():
-                cnf_var = int(cnf_literal)
+                neg = False
+                if cnf_literal[0] == "-":
+                    neg = True
+                    cnf_literal = cnf_literal[1:]
 
                 # make sure the variable has not been added already
-                if abs(cnf_var) not in self.var_map.keys():
+                if cnf_literal not in self.var_map.keys():
                     var_count += 1
-                    self.var_map[abs(cnf_var)] = var_count
-                    self.var_clauses = 
-
+                    self.var_map[cnf_literal] = var_count
+                    # since the var hasn't been seen yet, it mustn't belong to any clause yet
+                    # so create a space for it in the var_clauses map
+                    self.var_clauses[var_count] = []  # will store a set (list better, set can't be hashed into set)
+                clause.add((-self.var_map[cnf_literal] if neg else self.var_map[cnf_literal]))
                 # let var point to clause (tells us var belongs to the clause)
-                self.var_clauses.get(self.var_map[abs(cnf_var)]).add = clause
-
-                if cnf_var not in clause:
-                    clause.add(cnf_var)
+                # used later to check if a var belongs to a given clause
+                self.var_clauses.get(self.var_map[cnf_literal]).append(clause)
             self.clauses.append(clause)
 
         self.model = [random.getrandbits(1) for i in range(var_count)]
@@ -83,12 +88,11 @@ class GSAT():
             for i in range(len(self.model)):
                 self.model[i] = int(not self.model[i])  # temporarily flip var's value
                 var_score_satisfied = 0  # how many clauses would be satisfied?
-                for clause in self.clauses:
-                    # check if the var at index i in the model is in the clause
-                    # var index is i but the var is i + 1 instead
-                    if i + 1 in clause:
-                        var_score_satisfied += self.__is_clause_satisfied__(clause)
-                score_map[i] = var_score_satisfied # hash each var's score into a map using its index (i)
+                # go through every clause the var is in and check for satisfaction
+                # var index is i but the var is i + 1 instead
+                for clause in self.var_clauses[i + 1]:
+                    var_score_satisfied += self.__is_clause_satisfied__(clause)
+                score_map[i] = var_score_satisfied  # hash each var's score into a map using its index (i)
                 self.model[i] = int(not self.model[i])  # un-flip var's value
 
             # uniformly at random choose one of the vars with
@@ -96,8 +100,8 @@ class GSAT():
             # note that variable's index was stored
             # this can be used to access the model directly
             max_score = max(score_map.values())
-            max_vars = [key for key, value in filter(lambda items: items[1] == max_score, score_map.items())]
-            max_index_random = random.choice(max_vars)
+            max_var_indices = [key for key, value in filter(lambda items: items[1] == max_score, score_map.items())]
+            max_index_random = random.choice(max_var_indices)
             self.model[max_index_random] = int(not self.model[max_index_random])
 
         return self.walksat()  # repeat the walksat process recursively
