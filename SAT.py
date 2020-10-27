@@ -44,7 +44,7 @@ class SAT(GSAT):
                             var_count += self.__is_clause_satisfied__(clause)
                     if var_count > max_count:
                         max_var = abs(var)
-                print("maxVar", max_var)
+
 
                 if max_var is not None:
                     self.model[abs(max_var) - 1] = int(not self.model[abs(max_var) - 1])

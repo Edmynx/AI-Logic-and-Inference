@@ -6,6 +6,7 @@ class GSAT():
         self.var_map = {}  # maps clause literals in the given file to integer variables
         self.model = None  # model for assigning values to integer variables
         self.clauses = []  # list of all clauses in the given file
+        self.var_clauses = {}
         self.__convert_to_generic_SAT__(cnf_file)  # do SAT conversion
 
     # convert every unique clause literal in the given cnf_file
@@ -16,19 +17,21 @@ class GSAT():
         for cnf in file_read:
             clause = set()
             for cnf_literal in cnf.split():
-                neg = False
-                if cnf_literal[0] == "-":
-                    neg = True
-                    cnf_literal = cnf_literal[1:]
+                cnf_var = int(cnf_literal)
 
                 # make sure the variable has not been added already
-                if cnf_literal not in self.var_map.keys():
+                if abs(cnf_var) not in self.var_map.keys():
                     var_count += 1
-                    self.var_map[cnf_literal] = var_count
+                    self.var_map[abs(cnf_var)] = var_count
+                    self.var_clauses = 
 
-                if (-self.var_map[cnf_literal] if neg else self.var_map[cnf_literal]) not in clause:
-                    clause.add((-self.var_map[cnf_literal] if neg else self.var_map[cnf_literal]))
+                # let var point to clause (tells us var belongs to the clause)
+                self.var_clauses.get(self.var_map[abs(cnf_var)]).add = clause
+
+                if cnf_var not in clause:
+                    clause.add(cnf_var)
             self.clauses.append(clause)
+
         self.model = [random.getrandbits(1) for i in range(var_count)]
         file_read.close()
 
